@@ -5,8 +5,8 @@ import { asyncHandler } from "../utils/async-handler";
 
 export const authRoutes = Router();
 
-authRoutes.post("/register", asyncHandler(authController.register)); // Route for user registration
-authRoutes.post("/login", asyncHandler(authController.login)); 
+authRoutes.post("/register", asyncHandler(authController.register)); 
+authRoutes.post("/login", asyncHandler(authController.login)); // Route for user login
 authRoutes.get(
   "/me",
   asyncHandler(authenticationMiddleware),
