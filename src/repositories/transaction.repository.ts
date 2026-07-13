@@ -50,7 +50,7 @@ const transactionDetailsInclude = {
   },
 } as const;
 
-export const transactionRepository = { 
+export const transactionRepository = {  //transaction
   create(client: TransactionClientLike, data: TransactionCreateData) {
     return client.tradeTransaction.create({ data });
   },

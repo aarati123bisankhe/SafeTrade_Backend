@@ -7,7 +7,7 @@ import { asyncHandler } from "../utils/async-handler";
 
 export const transactionRoutes = Router(); 
 
-transactionRoutes.post( //transaction
+transactionRoutes.post( 
   "/",
   asyncHandler(authenticationMiddleware), 
   authorizeRoles(UserRole.BUYER),
