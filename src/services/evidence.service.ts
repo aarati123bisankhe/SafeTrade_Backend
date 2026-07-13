@@ -19,10 +19,10 @@ type AuthenticatedUser = {
   role: UserRole;
 };
 
-const STORAGE_DIR = path.resolve(process.cwd(), "storage/dispute-evidence");
+const STORAGE_DIR = path.resolve(process.cwd(), "storage/dispute-evidence"); // Absolute path to the storage directory for dispute evidence files
 const MAX_FILES_PER_DISPUTE = 5;
 
-const allowedDetectedTypes = new Map<string, string>([
+const allowedDetectedTypes = new Map<string, string>([ // MIME type to file extension mapping
   ["image/jpeg", "jpg"],
   ["image/png", "png"],
   ["application/pdf", "pdf"],
