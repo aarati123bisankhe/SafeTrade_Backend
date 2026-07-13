@@ -24,7 +24,7 @@ app.get("/api/health", (_req, res) => {
   });
 });
 
-app.use("/api/auth", authRoutes); // Route for authentication-related endpoints
+app.use("/api/auth", authRoutes); 
 app.use("/api/products", productRoutes);
 app.use("/api/transactions", transactionRoutes);
 

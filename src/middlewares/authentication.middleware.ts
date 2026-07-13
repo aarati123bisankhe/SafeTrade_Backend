@@ -8,7 +8,7 @@ type JwtPayload = {
   userId: string;
 };
 
-export const authenticationMiddleware = async (
+export const authenticationMiddleware = async ( //
   req: Request,
   _res: Response,
   next: NextFunction,
