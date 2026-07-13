@@ -53,6 +53,7 @@ const nextValue = () => {
 };
 
 export const clearDatabase = async () => {
+  await prisma.auditLog.deleteMany();
   await prisma.disputeEvidence.deleteMany();
   await prisma.dispute.deleteMany();
   await prisma.tradeTransaction.deleteMany();

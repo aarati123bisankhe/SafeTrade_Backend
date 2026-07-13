@@ -1,6 +1,7 @@
 import { Prisma, ProductStatus, UserRole } from "@prisma/client";
 import { HttpError } from "../errors/http-error";
 import { productRepository } from "../repositories/product.repository";
+import { auditLogService, type RequestContext } from "./audit-log.service";
 import {
   CreateProductInput,
   UpdateProductInput,
@@ -26,10 +27,14 @@ export const productService = { //product
     return product;
   },
 
-  async createProduct(payload: CreateProductInput, currentUser: AuthenticatedUser) {
+  async createProduct(
+    payload: CreateProductInput,
+    currentUser: AuthenticatedUser,
+    context?: RequestContext,
+  ) {
     const { name, description, price, category, condition, location } = payload;
 
-    return productRepository.create({
+    const product = await productRepository.create({
       name,
       description,
       price,
@@ -42,12 +47,30 @@ export const productService = { //product
         },
       },
     });
+
+    await auditLogService.createLogSafely({
+      eventType: "PRODUCT_CREATED",
+      actorId: currentUser.id,
+      targetType: "Product",
+      targetId: product.id,
+      description: "Seller created a product listing",
+      ipAddress: context?.ipAddress,
+      userAgent: context?.userAgent,
+      metadata: {
+        category: product.category,
+        condition: product.condition,
+        status: product.status,
+      },
+    });
+
+    return product;
   },
 
   async updateProduct(
     productId: string,
     payload: UpdateProductInput,
     currentUser: AuthenticatedUser,
+    context?: RequestContext,
   ) {
     const product = await productRepository.findById(productId);
 
@@ -74,10 +97,29 @@ export const productService = { //product
       ...(payload.location !== undefined ? { location: payload.location } : {}),
     } satisfies Prisma.ProductUpdateInput;
 
-    return productRepository.update(productId, updateData);
+    const updatedProduct = await productRepository.update(productId, updateData);
+
+    await auditLogService.createLogSafely({
+      eventType: "PRODUCT_UPDATED",
+      actorId: currentUser.id,
+      targetType: "Product",
+      targetId: updatedProduct.id,
+      description: "Product listing was updated",
+      ipAddress: context?.ipAddress,
+      userAgent: context?.userAgent,
+      metadata: {
+        status: updatedProduct.status,
+      },
+    });
+
+    return updatedProduct;
   },
 
-  async deleteProduct(productId: string, currentUser: AuthenticatedUser) {
+  async deleteProduct(
+    productId: string,
+    currentUser: AuthenticatedUser,
+    context?: RequestContext,
+  ) {
     const product = await productRepository.findById(productId);
 
     if (!product || product.status === ProductStatus.REMOVED) {
@@ -91,6 +133,21 @@ export const productService = { //product
       throw new HttpError(403, "You do not have permission to delete this product");
     }
 
-    return productRepository.delete(productId);
+    const deletedProduct = await productRepository.delete(productId);
+
+    await auditLogService.createLogSafely({
+      eventType: "PRODUCT_REMOVED",
+      actorId: currentUser.id,
+      targetType: "Product",
+      targetId: deletedProduct.id,
+      description: "Product listing was removed",
+      ipAddress: context?.ipAddress,
+      userAgent: context?.userAgent,
+      metadata: {
+        sellerId: deletedProduct.sellerId,
+      },
+    });
+
+    return deletedProduct;
   },
 };

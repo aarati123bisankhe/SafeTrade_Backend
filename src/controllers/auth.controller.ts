@@ -2,10 +2,15 @@ import { Request, Response } from "express";
 import { authService } from "../services/auth.service";
 import { loginSchema, registerSchema } from "../validators/auth.validator";
 
+const getRequestContext = (request: Request) => ({
+  ipAddress: request.ip,
+  userAgent: request.get("user-agent") ?? undefined,
+});
+
 export const authController = { // Controller for handling authentication-related requests
   async register(req: Request, res: Response) {
     const payload = registerSchema.parse(req.body);
-    const result = await authService.register(payload);
+    const result = await authService.register(payload, getRequestContext(req));
 
     res.status(201).json({
       success: true,
@@ -16,7 +21,7 @@ export const authController = { // Controller for handling authentication-relate
 
   async login(req: Request, res: Response) {
     const payload = loginSchema.parse(req.body);
-    const result = await authService.login(payload);
+    const result = await authService.login(payload, getRequestContext(req));
 
     res.status(200).json({
       success: true,

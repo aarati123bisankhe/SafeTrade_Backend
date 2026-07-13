@@ -5,6 +5,11 @@ import {
   updateProductSchema,
 } from "../validators/product.validator";
 
+const getRequestContext = (request: Request) => ({
+  ipAddress: request.ip,
+  userAgent: request.get("user-agent") ?? undefined,
+});
+
 export const productController = { 
   async getAll(_req: Request, res: Response) {
     const products = await productService.getAllProducts();
@@ -28,7 +33,11 @@ export const productController = {
 
   async create(req: Request, res: Response) {
     const payload = createProductSchema.parse(req.body);
-    const product = await productService.createProduct(payload, req.user!);
+    const product = await productService.createProduct(
+      payload,
+      req.user!,
+      getRequestContext(req),
+    );
 
     res.status(201).json({
       success: true,
@@ -43,6 +52,7 @@ export const productController = {
       req.params.productId,
       payload,
       req.user!,
+      getRequestContext(req),
     );
 
     res.status(200).json({
@@ -53,7 +63,11 @@ export const productController = {
   },
 
   async remove(req: Request, res: Response) {
-    await productService.deleteProduct(req.params.productId, req.user!);
+    await productService.deleteProduct(
+      req.params.productId,
+      req.user!,
+      getRequestContext(req),
+    );
 
     res.status(200).json({
       success: true,

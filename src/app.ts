@@ -3,6 +3,7 @@ import express from "express";
 import helmet from "helmet";
 import morgan from "morgan";
 import { authRoutes } from "./routes/auth.routes";
+import { auditLogRoutes } from "./routes/audit-log.routes";
 import { disputeRoutes } from "./routes/dispute.routes";
 import { HttpError } from "./errors/http-error";
 import { errorMiddleware } from "./middlewares/error.middleware";
@@ -26,6 +27,7 @@ app.get("/api/health", (_req, res) => {
 });
 
 app.use("/api/auth", authRoutes); 
+app.use("/api/admin/audit-logs", auditLogRoutes);
 app.use("/api/disputes", disputeRoutes);
 app.use("/api/products", productRoutes);
 app.use("/api/transactions", transactionRoutes);

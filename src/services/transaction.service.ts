@@ -6,7 +6,9 @@ import {
 } from "@prisma/client";
 import { prisma } from "../configs/database.config";
 import { HttpError } from "../errors/http-error";
+import type { AuditLogClientLike } from "../repositories/audit-log.repository";
 import { transactionRepository } from "../repositories/transaction.repository";
+import { auditLogService, type RequestContext } from "./audit-log.service";
 import { CreateTransactionInput } from "../validators/transaction.validator";
 
 type AuthenticatedUser = {
@@ -67,6 +69,7 @@ export const transactionService = {
   async createTransaction(  
     payload: CreateTransactionInput,
     currentUser: AuthenticatedUser,
+    context?: RequestContext,
   ) {
     return prisma.$transaction(async (tx) => {
       const product = await tx.product.findUnique({
@@ -114,7 +117,7 @@ export const transactionService = {
         status: "FUNDS_HELD",
       };
 
-      return transactionRepository.create(
+      const transaction = await transactionRepository.create(
         tx as Prisma.TransactionClient & {
           tradeTransaction: {
             create: typeof prisma.tradeTransaction.create;
@@ -122,6 +125,44 @@ export const transactionService = {
         },
         transactionData,
       );
+
+      await auditLogService.createLog(
+        {
+          eventType: "PRODUCT_RESERVED",
+          actorId: currentUser.id,
+          targetType: "Product",
+          targetId: product.id,
+          description: "Product was reserved for an escrow transaction",
+          ipAddress: context?.ipAddress,
+          userAgent: context?.userAgent,
+          metadata: {
+            transactionId: transaction.id,
+            sellerId: product.sellerId,
+            status: "RESERVED",
+          },
+        },
+        tx as AuditLogClientLike,
+      );
+
+      await auditLogService.createLog(
+        {
+          eventType: "TRANSACTION_CREATED",
+          actorId: currentUser.id,
+          targetType: "Transaction",
+          targetId: transaction.id,
+          description: "Buyer created an escrow-protected transaction",
+          ipAddress: context?.ipAddress,
+          userAgent: context?.userAgent,
+          metadata: {
+            productId: transaction.productId,
+            sellerId: transaction.sellerId,
+            status: transaction.status,
+          },
+        },
+        tx as AuditLogClientLike,
+      );
+
+      return transaction;
     });
   },
 
@@ -145,6 +186,7 @@ export const transactionService = {
   async acceptTransaction(
     transactionId: string,
     currentUser: AuthenticatedUser,
+    context?: RequestContext,
   ) {
     const transaction = await findTransactionOrThrow(transactionId);
     assertSellerOwnership(transaction, currentUser);
@@ -156,18 +198,48 @@ export const transactionService = {
       );
     }
 
-    return transactionRepository.updateStatus(
-      prisma,
-      transactionId,
-      {
-        status: TransactionStatus.SELLER_ACCEPTED,
-      },
-    );
+    return prisma.$transaction(async (tx) => {
+      const updatedTransaction = await transactionRepository.updateStatus(
+        tx as Prisma.TransactionClient & {
+          tradeTransaction: {
+            create: typeof prisma.tradeTransaction.create;
+            update: typeof prisma.tradeTransaction.update;
+          };
+          product: {
+            update: typeof prisma.product.update;
+          };
+        },
+        transactionId,
+        {
+          status: TransactionStatus.SELLER_ACCEPTED,
+        },
+      );
+
+      await auditLogService.createLog(
+        {
+          eventType: "TRANSACTION_ACCEPTED",
+          actorId: currentUser.id,
+          targetType: "Transaction",
+          targetId: updatedTransaction.id,
+          description: "Seller accepted an escrow transaction",
+          ipAddress: context?.ipAddress,
+          userAgent: context?.userAgent,
+          metadata: {
+            buyerId: updatedTransaction.buyerId,
+            status: updatedTransaction.status,
+          },
+        },
+        tx as AuditLogClientLike,
+      );
+
+      return updatedTransaction;
+    });
   },
 
   async shipTransaction(
     transactionId: string,
     currentUser: AuthenticatedUser,
+    context?: RequestContext,
   ) {
     const transaction = await findTransactionOrThrow(transactionId);
     assertSellerOwnership(transaction, currentUser);
@@ -179,18 +251,48 @@ export const transactionService = {
       );
     }
 
-    return transactionRepository.updateStatus(
-      prisma,
-      transactionId,
-      {
-        status: TransactionStatus.SHIPPED,
-      },
-    );
+    return prisma.$transaction(async (tx) => {
+      const updatedTransaction = await transactionRepository.updateStatus(
+        tx as Prisma.TransactionClient & {
+          tradeTransaction: {
+            create: typeof prisma.tradeTransaction.create;
+            update: typeof prisma.tradeTransaction.update;
+          };
+          product: {
+            update: typeof prisma.product.update;
+          };
+        },
+        transactionId,
+        {
+          status: TransactionStatus.SHIPPED,
+        },
+      );
+
+      await auditLogService.createLog(
+        {
+          eventType: "TRANSACTION_SHIPPED",
+          actorId: currentUser.id,
+          targetType: "Transaction",
+          targetId: updatedTransaction.id,
+          description: "Seller marked a transaction as shipped",
+          ipAddress: context?.ipAddress,
+          userAgent: context?.userAgent,
+          metadata: {
+            buyerId: updatedTransaction.buyerId,
+            status: updatedTransaction.status,
+          },
+        },
+        tx as AuditLogClientLike,
+      );
+
+      return updatedTransaction;
+    });
   },
 
   async confirmReceipt(
     transactionId: string,
     currentUser: AuthenticatedUser,
+    context?: RequestContext,
   ) {
     const transaction = await findTransactionOrThrow(transactionId);
     assertBuyerOwnership(transaction, currentUser);
@@ -214,7 +316,7 @@ export const transactionService = {
         },
       });
 
-      return transactionRepository.updateStatus(
+      const updatedTransaction = await transactionRepository.updateStatus(
         tx as Prisma.TransactionClient & {
           tradeTransaction: {
             create: typeof prisma.tradeTransaction.create;
@@ -231,6 +333,42 @@ export const transactionService = {
           releasedAt: new Date(),
         },
       );
+
+      await auditLogService.createLog(
+        {
+          eventType: "RECEIPT_CONFIRMED",
+          actorId: currentUser.id,
+          targetType: "Transaction",
+          targetId: updatedTransaction.id,
+          description: "Buyer confirmed receipt of the product",
+          ipAddress: context?.ipAddress,
+          userAgent: context?.userAgent,
+          metadata: {
+            productId: updatedTransaction.productId,
+            status: updatedTransaction.status,
+          },
+        },
+        tx as AuditLogClientLike,
+      );
+
+      await auditLogService.createLog(
+        {
+          eventType: "FUNDS_RELEASED",
+          actorId: currentUser.id,
+          targetType: "Transaction",
+          targetId: updatedTransaction.id,
+          description: "Escrow funds were released after buyer confirmation",
+          ipAddress: context?.ipAddress,
+          userAgent: context?.userAgent,
+          metadata: {
+            productId: updatedTransaction.productId,
+            finalStatus: updatedTransaction.status,
+          },
+        },
+        tx as AuditLogClientLike,
+      );
+
+      return updatedTransaction;
     });
   },
 };

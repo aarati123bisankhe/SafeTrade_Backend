@@ -4,6 +4,7 @@ import { User, UserRole } from "@prisma/client";
 import { env } from "../configs/env.config";
 import { HttpError } from "../errors/http-error";
 import { userRepository } from "../repositories/user.repository";
+import { auditLogService, type RequestContext } from "./audit-log.service";
 import { LoginInput, RegisterInput } from "../validators/auth.validator";
 
 type SafeUser = Omit<User, "password">;
@@ -22,7 +23,7 @@ const createToken = (userId: string): string => {
 };
 
 export const authService = {
-  async register(payload: RegisterInput) {
+  async register(payload: RegisterInput, context?: RequestContext) {
     const [existingEmailUser, existingUsernameUser] = await Promise.all([
       userRepository.findByEmail(payload.email),
       userRepository.findByUsername(payload.username.trim()),
@@ -44,16 +45,39 @@ export const authService = {
       role: UserRole.BUYER,
     });
 
+    await auditLogService.createLogSafely({
+      eventType: "USER_REGISTERED",
+      actorId: user.id,
+      targetType: "User",
+      targetId: user.id,
+      description: "A new user account was registered",
+      ipAddress: context?.ipAddress,
+      userAgent: context?.userAgent,
+      metadata: {
+        role: user.role,
+      },
+    });
+
     return {
       user: sanitizeUser(user),
       token: createToken(user.id),
     };
   },
 
-  async login(payload: LoginInput) {
+  async login(payload: LoginInput, context?: RequestContext) {
     const user = await userRepository.findByEmail(payload.email);
 
     if (!user) {
+      await auditLogService.createLogSafely({
+        eventType: "LOGIN_FAILURE",
+        targetType: "User",
+        description: "Login failed because the account could not be found",
+        ipAddress: context?.ipAddress,
+        userAgent: context?.userAgent,
+        metadata: {
+          reason: "USER_NOT_FOUND",
+        },
+      });
       throw new HttpError(401, "Invalid email or password");
     }
 
@@ -63,8 +87,33 @@ export const authService = {
     );
 
     if (!isPasswordValid) {
+      await auditLogService.createLogSafely({
+        eventType: "LOGIN_FAILURE",
+        actorId: user.id,
+        targetType: "User",
+        targetId: user.id,
+        description: "Login failed because an invalid password was provided",
+        ipAddress: context?.ipAddress,
+        userAgent: context?.userAgent,
+        metadata: {
+          reason: "INVALID_PASSWORD",
+        },
+      });
       throw new HttpError(401, "Invalid email or password");
     }
+
+    await auditLogService.createLogSafely({
+      eventType: "LOGIN_SUCCESS",
+      actorId: user.id,
+      targetType: "User",
+      targetId: user.id,
+      description: "User logged in successfully",
+      ipAddress: context?.ipAddress,
+      userAgent: context?.userAgent,
+      metadata: {
+        role: user.role,
+      },
+    });
 
     return {
       user: sanitizeUser(user),

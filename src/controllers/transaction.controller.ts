@@ -5,12 +5,18 @@ import {
   transactionIdParamSchema,
 } from "../validators/transaction.validator";
 
+const getRequestContext = (request: Request) => ({
+  ipAddress: request.ip,
+  userAgent: request.get("user-agent") ?? undefined,
+});
+
 export const transactionController = { 
   async create(req: Request, res: Response) {
     const payload = createTransactionSchema.parse(req.body);
     const transaction = await transactionService.createTransaction(
       payload,
       req.user!,
+      getRequestContext(req),
     );
 
     res.status(201).json({
@@ -60,6 +66,7 @@ export const transactionController = {
     const transaction = await transactionService.acceptTransaction(
       params.transactionId,
       req.user!,
+      getRequestContext(req),
     );
 
     res.status(200).json({
@@ -74,6 +81,7 @@ export const transactionController = {
     const transaction = await transactionService.shipTransaction(
       params.transactionId,
       req.user!,
+      getRequestContext(req),
     );
 
     res.status(200).json({
@@ -88,6 +96,7 @@ export const transactionController = {
     const transaction = await transactionService.confirmReceipt(
       params.transactionId,
       req.user!,
+      getRequestContext(req),
     );
 
     res.status(200).json({

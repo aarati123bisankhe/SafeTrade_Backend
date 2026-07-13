@@ -66,6 +66,27 @@ enum DisputeReason {
   OTHER
 }
 
+enum AuditEventType {
+  USER_REGISTERED
+  LOGIN_SUCCESS
+  LOGIN_FAILURE
+  PRODUCT_CREATED
+  PRODUCT_UPDATED
+  PRODUCT_REMOVED
+  TRANSACTION_CREATED
+  PRODUCT_RESERVED
+  TRANSACTION_ACCEPTED
+  TRANSACTION_SHIPPED
+  RECEIPT_CONFIRMED
+  FUNDS_RELEASED
+  DISPUTE_OPENED
+  DISPUTE_REVIEW_STARTED
+  DISPUTE_REFUNDED
+  DISPUTE_RELEASED_TO_SELLER
+  DISPUTE_REJECTED
+  UNAUTHORIZED_ACCESS_ATTEMPT
+}
+
 model User {
   id                 String             @id @default(cuid())
   username           String             @unique
@@ -78,6 +99,7 @@ model User {
   raisedDisputes     Dispute[]          @relation("RaisedDisputes")
   resolvedDisputes   Dispute[]          @relation("ResolvedDisputes")
   disputeEvidence    DisputeEvidence[]
+  auditLogs          AuditLog[]
   createdAt          DateTime           @default(now())
   updatedAt          DateTime           @updatedAt
 }
@@ -166,4 +188,24 @@ model DisputeEvidence {
 
   @@index([disputeId])
   @@index([uploadedById])
+}
+
+model AuditLog {
+  id          String         @id @default(cuid())
+  eventType   AuditEventType
+  actorId     String?
+  targetType  String?
+  targetId    String?
+  description String
+  ipAddress   String?
+  userAgent   String?
+  metadata    Json?
+  createdAt   DateTime       @default(now())
+
+  actor User? @relation(fields: [actorId], references: [id])
+
+  @@index([actorId])
+  @@index([eventType])
+  @@index([targetType, targetId])
+  @@index([createdAt])
 }

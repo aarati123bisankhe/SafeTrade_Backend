@@ -6,10 +6,19 @@ import {
   resolveDisputeSchema,
 } from "../validators/dispute.validator";
 
+const getRequestContext = (request: Request) => ({
+  ipAddress: request.ip,
+  userAgent: request.get("user-agent") ?? undefined,
+});
+
 export const disputeController = { 
   async create(req: Request, res: Response) {
     const payload = createDisputeSchema.parse(req.body);
-    const dispute = await disputeService.createDispute(payload, req.user!);
+    const dispute = await disputeService.createDispute(
+      payload,
+      req.user!,
+      getRequestContext(req),
+    );
 
     res.status(201).json({
       success: true,
@@ -47,6 +56,7 @@ export const disputeController = {
     const dispute = await disputeService.markUnderReview(
       params.disputeId,
       req.user!,
+      getRequestContext(req),
     );
 
     res.status(200).json({
@@ -63,6 +73,7 @@ export const disputeController = {
       params.disputeId,
       payload,
       req.user!,
+      getRequestContext(req),
     );
 
     res.status(200).json({
