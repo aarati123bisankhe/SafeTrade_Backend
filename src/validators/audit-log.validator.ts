@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-const auditEventTypes = [ // List of audit event types
+const auditEventTypes = [
   "USER_REGISTERED",
   "LOGIN_SUCCESS",
   "LOGIN_FAILURE",

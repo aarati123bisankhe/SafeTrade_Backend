@@ -12,7 +12,7 @@ export type RequestContext = {
   userAgent?: string;
 };
 
-export type AuditEventTypeValue =
+export type AuditEventTypeValue = //auditEventTypes[number]
   | "USER_REGISTERED"
   | "LOGIN_SUCCESS"
   | "LOGIN_FAILURE"
