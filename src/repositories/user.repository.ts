@@ -7,7 +7,7 @@ export type LoginSecurityUpdateInput = {
   lastFailedLoginAt: Date | null;
 };
 
-export const userRepository = { // Repository for managing user data in the database
+export const userRepository = { 
   create(data: Prisma.UserCreateInput): Promise<User> {
     return prisma.user.create({ data });
   },
