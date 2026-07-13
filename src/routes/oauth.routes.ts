@@ -5,7 +5,7 @@ import { asyncHandler } from "../utils/async-handler";
 
 export const oauthRoutes = Router();
 
-oauthRoutes.get("/google", asyncHandler(oauthController.googleStart));
+oauthRoutes.get("/google", asyncHandler(oauthController.googleStart)); // Initiates the Google OAuth flow
 oauthRoutes.get("/google/callback", asyncHandler(oauthController.googleCallback));
 oauthRoutes.post(
   "/google/link",

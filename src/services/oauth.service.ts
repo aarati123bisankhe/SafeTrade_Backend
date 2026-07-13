@@ -63,7 +63,7 @@ const GOOGLE_ISSUERS = new Set([
   "https://accounts.google.com",
 ]);
 
-const createDefaultGoogleAdapter = (): GoogleOidcAdapter => { //this function creates a default implementation of the Google OIDC adapter
+const createDefaultGoogleAdapter = (): GoogleOidcAdapter => { 
   const client = new OAuth2Client({
     clientId: env.googleClientId,
     clientSecret: env.googleClientSecret,
@@ -71,7 +71,7 @@ const createDefaultGoogleAdapter = (): GoogleOidcAdapter => { //this function cr
   });
 
   return {
-    getAuthorizationUrl({ state, nonce, codeChallenge }) {
+    getAuthorizationUrl({ state, nonce, codeChallenge }) { 
       return client.generateAuthUrl({
         prompt: "select_account",
         response_type: "code",
@@ -84,7 +84,7 @@ const createDefaultGoogleAdapter = (): GoogleOidcAdapter => { //this function cr
       });
     },
 
-    async exchangeAuthorizationCode({ code, codeVerifier }) {
+    async exchangeAuthorizationCode({ code, codeVerifier }) { 
       const tokenResponse = await client.getToken({
         code,
         codeVerifier,
