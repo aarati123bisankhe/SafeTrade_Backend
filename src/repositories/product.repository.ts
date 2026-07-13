@@ -21,7 +21,7 @@ export const productRepository = { //product
     });
   },
 
-  create(data: Prisma.ProductCreateInput): Promise<Product> { 
+  create(data: Prisma.ProductCreateInput): Promise<Product> {  //create
     return prisma.product.create({ data });
   },
 
