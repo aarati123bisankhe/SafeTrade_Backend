@@ -7,8 +7,8 @@ import { asyncHandler } from "../utils/async-handler";
 
 export const productRoutes = Router();
 
-productRoutes.get("/", asyncHandler(productController.getAll));
-productRoutes.get("/:productId", asyncHandler(productController.getById)); //get product by id route
+productRoutes.get("/", asyncHandler(productController.getAll)); //product
+productRoutes.get("/:productId", asyncHandler(productController.getById)); 
 productRoutes.post(
   "/",
   asyncHandler(authenticationMiddleware),
