@@ -5,7 +5,7 @@ export type RecoveryCodeCreateInput = {
   codeHash: string;
 };
 
-export const totpRepository = { // This repository handles database operations related to TOTP and recovery codes
+export const totpRepository = { 
   updateUser(userId: string, data: Record<string, unknown>) {
     return prisma.user.update({
       where: { id: userId },
