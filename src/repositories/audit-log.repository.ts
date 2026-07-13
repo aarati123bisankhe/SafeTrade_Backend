@@ -1,6 +1,6 @@
 import { prisma } from "../configs/database.config";
 
-export type AuditLogCreateData = { // Represents the data required to create an audit log entry
+export type AuditLogCreateData = { 
   eventType: string;
   actorId?: string;
   targetType?: string;
