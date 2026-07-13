@@ -5,13 +5,13 @@ import {
   updateProductSchema,
 } from "../validators/product.validator";
 
-export const productController = {
+export const productController = { 
   async getAll(_req: Request, res: Response) {
     const products = await productService.getAllProducts();
 
     res.status(200).json({
       success: true,
-      message: "Products fetched successfully",
+      message: "Products fetched successfully", // This line indicates that the products were successfully retrieved
       data: products,
     });
   },
