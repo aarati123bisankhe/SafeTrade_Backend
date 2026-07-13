@@ -4,9 +4,9 @@ import { otpRateLimiter } from "../middlewares/rate-limit.middleware";
 import { totpController } from "../controllers/totp.controller";
 import { asyncHandler } from "../utils/async-handler";
 
-export const totpRoutes = Router();
+export const totpRoutes = Router(); //routes for TOTP-related endpoints
 
-totpRoutes.post(
+totpRoutes.post( 
   "/setup",
   asyncHandler(authenticationMiddleware),
   asyncHandler(totpController.setup),
