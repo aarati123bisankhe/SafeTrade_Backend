@@ -9,7 +9,7 @@ export type LoginAttemptCreateInput = {
   reason?: string;
 };
 
-export const loginAttemptRepository = {
+export const loginAttemptRepository = { //login attempt repository for creating login attempts
   create(data: LoginAttemptCreateInput) {
     return prisma.loginAttempt.create({
       data,
