@@ -13,7 +13,7 @@ const getRequestContext = (request: Request) => ({
   userAgent: request.get("user-agent") ?? undefined,
 });
 
-export const totpController = { // Controller for handling TOTP-related requests
+export const totpController = { 
   async setup(req: Request, res: Response) {
     const result = await totpService.startSetup(req.user!, getRequestContext(req));
 
