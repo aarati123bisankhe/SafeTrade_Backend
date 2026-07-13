@@ -3,7 +3,7 @@ import { HttpError } from "../errors/http-error";
 
 type PrismaExecutor = Pick<Prisma.TransactionClient, "product">;
 
-export const escrowService = {
+export const escrowService = { //escrow
   async reserveProduct(executor: PrismaExecutor, productId: string) {
     const result = await executor.product.updateMany({
       where: {
