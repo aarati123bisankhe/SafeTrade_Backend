@@ -22,8 +22,8 @@ type AuthenticatedUser = {
 const STORAGE_DIR = path.resolve(process.cwd(), "storage/dispute-evidence"); 
 const MAX_FILES_PER_DISPUTE = 5;
 
-const allowedDetectedTypes = new Map<string, string>([ 
-  ["image/jpeg", "jpg"],
+const allowedDetectedTypes = new Map<string, string>([ // Map of allowed MIME types to their corresponding file extensions
+  ["image/jpeg", "jpg"], 
   ["image/png", "png"],
   ["application/pdf", "pdf"],
 ]);
