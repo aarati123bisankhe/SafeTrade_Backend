@@ -9,7 +9,7 @@ export const totpEnableSchema = z.object({
   code: sixDigitCode,
 });
 
-export const totpVerifyLoginSchema = z.object({
+export const totpVerifyLoginSchema = z.object({ //this schema is used for verifying TOTP during login
   mfaToken: z.string().trim().min(1, "MFA token is required"),
   code: sixDigitCode,
 });
