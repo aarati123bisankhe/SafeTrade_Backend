@@ -6,12 +6,12 @@ import {
   disputeEvidenceParamsSchema,
 } from "../validators/evidence.validator";
 
-const getRequestContext = (request: Request) => ({ // Function to extract request context information
+const getRequestContext = (request: Request) => ({
   ipAddress: request.ip,
   userAgent: request.get("user-agent") ?? undefined,
 });
 
-export const evidenceController = {
+export const evidenceController = { // Controller for handling dispute evidence-related operations
   async upload(req: Request, res: Response) {
     const params = disputeEvidenceParamsSchema.parse(req.params);
     const evidence = await evidenceService.uploadEvidence(
