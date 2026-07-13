@@ -7,7 +7,7 @@ const getRequestContext = (request: Request) => ({
   userAgent: request.get("user-agent") ?? undefined,
 });
 
-export const authController = { // Controller for handling authentication-related requests
+export const authController = { 
   async register(req: Request, res: Response) {
     const payload = registerSchema.parse(req.body);
     const result = await authService.register(payload, getRequestContext(req));
