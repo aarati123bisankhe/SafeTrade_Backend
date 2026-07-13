@@ -26,7 +26,7 @@ app.get("/api/health", (_req, res) => {
 });
 
 app.use("/api/auth", authRoutes); 
-app.use("/api/disputes", disputeRoutes); //dispute routes
+app.use("/api/disputes", disputeRoutes);
 app.use("/api/products", productRoutes);
 app.use("/api/transactions", transactionRoutes);
 
