@@ -18,6 +18,26 @@ type AuthenticatedUser = {
   role: UserRole;
 };
 
+const getReferenceId = (
+  value:
+    | string
+    | null
+    | undefined
+    | {
+        id?: string;
+      },
+) => {
+  if (!value) {
+    return null;
+  }
+
+  if (typeof value === "string") {
+    return value;
+  }
+
+  return value.id ?? null;
+};
+
 const disputableTransactionStatuses: TransactionStatus[] = [
   TransactionStatus.FUNDS_HELD,
   TransactionStatus.SELLER_ACCEPTED,
@@ -223,12 +243,19 @@ export const disputeService = {
       );
     }
 
+    const transactionId = getReferenceId(dispute.transactionId);
+    const productId = getReferenceId(dispute.transaction?.productId);
+
+    if (!transactionId) {
+      throw new HttpError(404, "Transaction not found");
+    }
+
     const now = new Date();
 
     return runInTransaction(async (session) => {
       if (payload.decision === "REFUND_BUYER") {
         await TradeTransactionModel.findByIdAndUpdate(
-          dispute.transactionId,
+          transactionId,
           {
             status: TransactionStatus.BUYER_REFUNDED,
             refundedAt: now,
@@ -236,13 +263,15 @@ export const disputeService = {
           { session },
         );
 
-        await ProductModel.findByIdAndUpdate(
-          dispute.transaction?.productId,
-          {
-            status: ProductStatus.AVAILABLE,
-          },
-          { session },
-        );
+        if (productId) {
+          await ProductModel.findByIdAndUpdate(
+            productId,
+            {
+              status: ProductStatus.AVAILABLE,
+            },
+            { session },
+          );
+        }
 
         const updatedDispute = (await disputeRepository.update(
           disputeId,
@@ -280,7 +309,7 @@ export const disputeService = {
 
       if (payload.decision === "RELEASE_SELLER") {
         await TradeTransactionModel.findByIdAndUpdate(
-          dispute.transactionId,
+          transactionId,
           {
             status: TransactionStatus.FUNDS_RELEASED,
             releasedAt: now,
@@ -288,13 +317,15 @@ export const disputeService = {
           { session },
         );
 
-        await ProductModel.findByIdAndUpdate(
-          dispute.transaction?.productId,
-          {
-            status: ProductStatus.SOLD,
-          },
-          { session },
-        );
+        if (productId) {
+          await ProductModel.findByIdAndUpdate(
+            productId,
+            {
+              status: ProductStatus.SOLD,
+            },
+            { session },
+          );
+        }
 
         const updatedDispute = (await disputeRepository.update(
           disputeId,
@@ -331,7 +362,7 @@ export const disputeService = {
       }
 
       await TradeTransactionModel.findByIdAndUpdate(
-        dispute.transactionId,
+        transactionId,
         {
           status: dispute.previousTransactionStatus,
         },

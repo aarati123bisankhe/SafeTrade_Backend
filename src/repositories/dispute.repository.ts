@@ -52,6 +52,7 @@ const attachEvidence = async (dispute: any) => {
 
   return {
     ...dispute,
+    transactionId: dispute.transactionId?.id ?? dispute.transactionId,
     raisedBy: dispute.raisedById,
     raisedById: dispute.raisedById?.id ?? dispute.raisedById,
     resolvedById: dispute.resolvedById?.id ?? dispute.resolvedById,
